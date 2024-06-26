@@ -7,7 +7,7 @@ async function main() {
   const artifactName = core.getInput('name');
   const artifactPath = core.getInput('path');
 
-   console.log(script({github, context}))
+  console.log(script({github, context}))
 
   console.log(`Artifact path: ${artifactPath}`);
   console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
