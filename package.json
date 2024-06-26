@@ -1,18 +1,19 @@
 {
   "name": "github-upload-artifact",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": ""
   },
   "keywords": [],
-  "author": "",
+  "author": "Yaron Avital",
   "license": "ISC",
   "dependencies": {
-    "@actions/artifact": "^2.1.1",
+    "@actions/artifact": "^2.1.7",
     "@actions/cache": "^3.2.4",
+    "@actions/core": "^1.10.1",
     "dotenv": "^16.4.4",
     "terminal-tasks": "^0.0.5"
-  }
+  },
+  "description": ""
 }
