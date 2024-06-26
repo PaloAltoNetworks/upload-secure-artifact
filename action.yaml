@@ -79,10 +79,7 @@ runs:
     - name: Install dependencies
       shell: bash 
       run: ls
-    - name: Install dependencies
-      shell: bash 
-      run: npm ci
-
+      
     - name: Run Node.js script
       shell: bash 
       run: node index.js
