@@ -84,11 +84,14 @@ runs:
       shell: bash 
       run: npm install ${{github.action_path}}
 
-    - name: Run Node.js script
-      shell: bash 
-      run: node ${{github.action_path}}/index.js
-
-    
     #- name: Run Node.js script
     #  shell: bash 
-    #  run: node index.js
+    #  run: node ${{github.action_path}}/index.js
+      
+    - name: Run Node.js script
+      with:
+         script: |
+            const script = require('${{github.action_path}}/index.js')
+            console.log(script({github, context}))
+
+
