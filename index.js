@@ -74,8 +74,6 @@ async function populateFilesWithFullPath(rootPath) {
   return files;
 }
 
-module.exports = ({github, context}) => {
-  return context.payload.client_payload.value
-}
+
 
 main();
