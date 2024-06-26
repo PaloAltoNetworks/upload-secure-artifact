@@ -8,6 +8,8 @@ async function main() {
   const artifactPath = core.getInput('path');
   console.log(`Artifact path: ${artifactPath}`);
   console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
+  console.log(github)
+  console.log(context)
 
   try {
     await uploadArtifact(artifact, artifactName, artifactPath);
