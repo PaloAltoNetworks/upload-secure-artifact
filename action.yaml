@@ -67,9 +67,9 @@ runs:
         path: .
 
     - uses: cider-research/upload-artifact-safe-action@main
-        with:
-          name: python-build
-          path: .
+      with:
+        name: python-build
+        path: .
           
     - name: Set up Node.js
       uses: actions/setup-node@v3
