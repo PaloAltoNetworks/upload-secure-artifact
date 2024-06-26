@@ -72,7 +72,9 @@ runs:
         node-version: 20
 
     - name: Install dependencies
+      shell: bash 
       run: npm install
 
     - name: Run Node.js script
+      shell: bash 
       run: node index.js
