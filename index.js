@@ -1,10 +1,41 @@
 const { DefaultArtifactClient } = require("@actions/artifact");
 const core = require('@actions/core');
-const artifact = new DefaultArtifactClient();
+
+async function main() {
+  const artifact = new DefaultArtifactClient();
+
+  const artifactName = core.getInput('name');
+  const artifactPath = core.getInput('path');
+
+  console.log(`Artifact path: ${artifactPath}`);
+  console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
+
+  try {
+    await uploadArtifact(artifact, artifactName, artifactPath);
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+}
+
+async function uploadArtifact(artifactClient, artifactName, artifactPath) {
+  if (hasGitFolderWithGitHubRunnerToken(artifactPath)) {
+    throw new Error("GITHUB_TOKEN must not be uploaded inside artifacts.");
+  }
+
+  const filesToUpload = await populateFilesWithFullPath(artifactPath);
+
+  await artifactClient.uploadArtifact(
+    artifactName,
+    filesToUpload,
+    process.env.GITHUB_WORKSPACE,
+    { retentionDays: 10 } // Optional: Set retention days
+  );
+}
 
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   const fs = require('fs');
   const path = require('path');
+
   const gitDir = path.join(pathToCheck, '.git');
   const configFile = path.join(gitDir, 'config');
   const regex = new RegExp('eC1hY2Nlc3MtdG9rZW46Z2hz', 'i');
@@ -22,59 +53,25 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   }
 }
 
-async function uploadArtifact(artifact_name,path,retention_days,compression_level) {
-    if (hasGitFolderWithGitHubRunnerToken(path)){
-    throw new Error("GITHUB_TOKEN must not be uploaded inside artifacts.");
-  }
-
-  const filesToUpload = populateFilesWithFullPath(path)
-  let response = await artifact.uploadArtifact(
-    // name of the artifact
-    artifact_name,
-    // files to include (supports absolute and relative paths)
-    filesToUpload,
-    // root directory to capture file paths from
-    process.env.GITHUB_WORKSPACE,
-    {
-      // optional: how long to retain the artifact
-      // if unspecified, defaults to repository/org retention settings (the limit of this value)
-      retentionDays: retention_days,
-      compressionLevel: compression_level
-    }
-  );
-}
-
-function populateFilesWithFullPath(rootPath) {  
-  const fs = require('fs');
+async function populateFilesWithFullPath(rootPath) {
+  const fs = require('fs').promises; // Use promises for cleaner async/await usage
   const path = require('path');
   const files = [];
 
-  fs.readdirSync(rootPath).forEach(fileName => {
+  const dirEntries = await fs.readdir(rootPath);
+  for (const fileName of dirEntries) {
     const filePath = path.join(rootPath, fileName);
 
-    const stats = fs.statSync(filePath);
+    const stats = await fs.stat(filePath);
     if (stats.isFile()) {
       files.push(filePath);
     } else if (stats.isDirectory()) {
       // Recursively collect files from subdirectories
-      files.push(...populateFilesWithFullPath(filePath));
+      files.push(...(await populateFilesWithFullPath(filePath)));
     }
-  });
+  }
 
   return files;
 }
 
-const name = core.getInput('name');
-const path = core.getInput('path');
-const retention_days = core.getInput('retention-days');
-const compression_level = core.getInput('compression-level');
-
-console.log("artifact path : ${path}")
-console.log("Workspace : ${process.env.GITHUB_WORKSPACE}")
-
-uploadArtifact(name,path,retention_days,compression_level);
-
-
-
-
-
+main();
