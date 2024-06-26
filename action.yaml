@@ -79,6 +79,10 @@ runs:
     - name: ls
       shell: bash 
       run: ls ${{github.action_path}}
+      
+    - name: npm install 
+      shell: bash 
+      run: npm ci ${{github.action_path}}
 
     - name: Run Node.js script
       shell: bash 
