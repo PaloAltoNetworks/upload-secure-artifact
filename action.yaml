@@ -82,9 +82,9 @@ runs:
 
     - uses: "actions/github-script@v6"
       with:
-      script: |
-        const script = require("${{github.action_path}}/index.js")
-        script({core})
+        script: |
+          const script = require("${{github.action_path}}/index.js")
+          script({core})
     
     #- name: Run Node.js script
     #  shell: bash 
