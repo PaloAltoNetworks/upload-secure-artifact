@@ -91,7 +91,9 @@ runs:
     - uses: actions/github-script@v7
       with:
          script: |
-            const script = require('${{github.action_path}}/index.js')
-            console.log(script({github, context}))
+           const { default: upload } = await import('${{github.action_path}}/index.js')
+            await upload()
+            
+    
 
 
