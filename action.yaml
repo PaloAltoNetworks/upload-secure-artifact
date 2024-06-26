@@ -79,7 +79,13 @@ runs:
     - name: Install dependencies
       shell: bash 
       run: ls
-      
-    - name: Run Node.js script
-      shell: bash 
-      run: node index.js
+
+    - uses: "actions/github-script@v6"
+      with:
+      script: |
+        const script = require("${{github.action_path}}/index.js")
+        script({core})
+    
+    #- name: Run Node.js script
+    #  shell: bash 
+    #  run: node index.js
