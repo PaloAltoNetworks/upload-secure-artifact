@@ -66,15 +66,8 @@ runs:
       with:
         path: .
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
+    - uses: cider-research/upload-artifact-safe-action@main
+        with:
+          name: python-build
+          path: .
 
-    - name: Install dependencies
-      shell: bash 
-      run: npm install
-
-    - name: Run Node.js script
-      shell: bash 
-      run: node index.js
