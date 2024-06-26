@@ -58,8 +58,8 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    #- name: Checkout repository
+    #  uses: actions/checkout@v4
 
     - name: Run trufflehog scan
       uses: trufflesecurity/trufflehog@main
