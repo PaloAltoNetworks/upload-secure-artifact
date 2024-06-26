@@ -82,7 +82,7 @@ runs:
       
     - name: npm install 
       shell: bash 
-      run: npm ci ${{github.action_path}}
+      run: npm install ${{github.action_path}}
 
     - name: Run Node.js script
       shell: bash 
