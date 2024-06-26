@@ -1,0 +1,31 @@
+name: Trufflehog and Node.js Composite Action
+description: A composite action that runs trufflehog for scanning secrets and then executes an index.js file.
+inputs:
+  github_token:
+    description: 'GitHub token for trufflehog'
+    required: true
+  node_version:
+    description: 'Node.js version to set up'
+    required: true
+    default: '14'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Run trufflehog scan
+      uses: trufflesecurity/trufflehog-actions-scan@v2.0.14
+      with:
+        github_token: ${{ inputs.github_token }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run Node.js script
+      run: node index.js
