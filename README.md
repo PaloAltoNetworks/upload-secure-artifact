@@ -45,11 +45,11 @@ jobs:
 ```
 ## Inputs
 
-	•	github_token (required): GitHub token for accessing the repository. Typically, you can use ${{ secrets.GITHUB_TOKEN }}.
+- github_token (required): GitHub token for accessing the repository. Typically, you can use ${{ secrets.GITHUB_TOKEN }}.
 
 ## Outputs
 
-	•	secrets_found: Indicates whether any secrets were found (true or false).
+- secrets_found: Indicates whether any secrets were found (true or false).
 
 ## License
 
@@ -61,8 +61,8 @@ jobs:
 
 ## Acknowledgments
 
-  •	This action uses truffleHog to scan for secrets.
-  •	The artifact upload functionality is based on the upload-artifact GitHub action.
+  - This action uses [truffleHog](https://github.com/trufflesecurity/trufflehog) to scan for secrets.
+  - The artifact upload functionality is based on the [upload-artifact](https://github.com/actions/upload-artifact) GitHub action V4.
 
 ## Contact
 
