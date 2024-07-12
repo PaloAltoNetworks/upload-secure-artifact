@@ -38,7 +38,7 @@ jobs:
 
     - name: Upload Artifacts
       if: steps.trufflehog.outputs.secrets_found == 'false'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: my-artifact
         path: path/to/artifacts
@@ -62,7 +62,7 @@ jobs:
 ## Acknowledgments
 
   - This action uses [truffleHog](https://github.com/trufflesecurity/trufflehog) to scan for secrets.
-  - The artifact upload functionality is based on the [upload-artifact](https://github.com/actions/upload-artifact) GitHub action V4.
+  - The artifact upload functionality is based on the [@actions/artifact](https://www.npmjs.com/package/@actions/artifact) that powers [upload-artifact](https://github.com/actions/upload-artifact) GitHub action.
 
 ## Contact
 
