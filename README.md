@@ -62,7 +62,8 @@ jobs:
 ## Acknowledgments
 
   - This action uses [truffleHog](https://github.com/trufflesecurity/trufflehog) to scan for secrets.
-  - The artifact upload functionality is based on the [@actions/artifact](https://www.npmjs.com/package/@actions/artifact) that powers [upload-artifact](https://github.com/actions/upload-artifact) GitHub action.
+  - The artifact upload functionality is based on the [@actions/artifact](https://www.npmjs.com/package/@actions/artifact) libary that powers [upload-artifact](https://github.com/actions/upload-artifact) GitHub action.
+  - Compatible with upload-artifact v4
 
 ## Contact
 
