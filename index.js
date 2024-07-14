@@ -10,7 +10,7 @@ async function main(github, context) {
   console.log(`Artifact path: ${artifactPath}`);
   console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
   console.log(context);
-  console.log("GitHub -----======------);
+  console.log("GitHub -----======------");
   console.log(github);
 
   try {
