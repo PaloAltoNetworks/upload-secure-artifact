@@ -59,11 +59,12 @@ runs:
   using: "composite"
   steps:
   
-    - name: Run trufflehog scan
-      uses: trufflesecurity/trufflehog@main
-      with:
-        scan: ${{ inputs.path }}
-        extra_args: "filesystem"
+    #- name: Run trufflehog scan
+    #  uses: trufflesecurity/trufflehog@main
+    #  with:
+    #    extra_args: "filesystem"
+
+    - run: docker run --rm -v /${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan
             
     - name: Set up Node.js
       uses: actions/setup-node@v3
