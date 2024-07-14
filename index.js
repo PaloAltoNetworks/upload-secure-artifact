@@ -1,7 +1,7 @@
 const { DefaultArtifactClient } = require("@actions/artifact");
 const core = require('@actions/core');
 
-async function main(github, context) {
+async function main(github, context, core) {
   console.log(`Inside main...`);
   const artifact = new DefaultArtifactClient();
 
@@ -77,8 +77,8 @@ async function populateFilesWithFullPath(rootPath) {
   return files;
 }
 
-module.exports = function ({ github, context }) { 
-   main(github, context);
+module.exports = function ({ github, context , core }) { 
+   main(github, context, core);
 }
 
 
