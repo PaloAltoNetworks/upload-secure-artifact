@@ -62,7 +62,7 @@ runs:
     - name: Run trufflehog scan
       uses: trufflesecurity/trufflehog@main
       with:
-        path: ${{ inputs.path }}
+        scan: ${{ inputs.path }}
             
     - name: Set up Node.js
       uses: actions/setup-node@v3
