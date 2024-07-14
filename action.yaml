@@ -81,5 +81,7 @@ runs:
       with:
          script: |
           const script = require('${{github.action_path}}/index.js')
+          console.log(script({github, context}))
+
           
      
