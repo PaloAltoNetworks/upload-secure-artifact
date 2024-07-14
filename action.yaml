@@ -64,7 +64,9 @@ runs:
     #  with:
     #    extra_args: "filesystem"
 
-    - run: docker run --rm -v /${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan
+    - name: Secrets Scanning 
+      run: docker run --rm -v /${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan
+      shell: bash 
             
     - name: Set up Node.js
       uses: actions/setup-node@v3
