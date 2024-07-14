@@ -82,6 +82,7 @@ runs:
          script: |       
           const script = require('${{github.action_path}}/index.js')
           a = core.getInput('name');
+          console.log(process.env)
           console.log("artifact name value is: " + a);
           // console.log(script({github, context, core.getInput('name'),core.getInput('path'),core.getInput('retention-days'),core.getInput('compression-level')}))
 
