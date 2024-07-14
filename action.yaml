@@ -81,7 +81,7 @@ runs:
       with:
          script: |       
           const script = require('${{github.action_path}}/index.js')
-          console.log(script({github, context, "${{ inputs.name }}","${{ inputs.path }}","${{ inputs.retention-days }}","${{ inputs.compression-level }}"}))
+          console.log(script({github, context,artifactName="${{ inputs.name }}",artifactPath="${{ inputs.path }}",retentionDays="${{ inputs.retention-days }}",compressionLevel="${{ inputs.compression-level }}"}))
 
           
      
