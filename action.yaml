@@ -63,15 +63,12 @@ runs:
       uses: trufflesecurity/trufflehog@main
       with:
         scan: ${{ inputs.path }}
+        extra_args: "filesystem"
             
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 21
-
-    - name: ls
-      shell: bash 
-      run: ls ${{github.action_path}}
       
     - name: npm install 
       shell: bash 
