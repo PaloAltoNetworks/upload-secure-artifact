@@ -63,6 +63,7 @@ runs:
       uses: trufflesecurity/trufflehog@main
       with:
         path: .
+        allow_failure: false
           
     - name: Set up Node.js
       uses: actions/setup-node@v3
