@@ -7,9 +7,6 @@ async function main(github, context, artifactName,artifactPath,retentionDays,com
 
   console.log(`Artifact path: ${artifactPath}`);
   console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
-  console.log(context);
-  console.log("GitHub -----======------");
-  console.log(github);
 
   try {
     await uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel);
