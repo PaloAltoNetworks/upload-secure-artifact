@@ -65,7 +65,7 @@ runs:
     #    extra_args: "filesystem"
 
     - name: Secrets Scanning 
-      run: docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --only-verified --fail
+      run: docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail
       shell: bash 
             
     - name: Set up Node.js
