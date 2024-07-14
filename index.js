@@ -1,12 +1,10 @@
 const { DefaultArtifactClient } = require("@actions/artifact");
 const core = require('@actions/core');
 
-async function main(github, context, core) {
+async function main(github, context, artifactName,artifactPath,retentionDays,compressionLevel) {
   console.log(`Inside main...`);
-  const artifact = new DefaultArtifactClient();
+  const artifactClient = new DefaultArtifactClient();
 
-  const artifactName = core.getInput('name');
-  const artifactPath = core.getInput('path');
   console.log(`Artifact path: ${artifactPath}`);
   console.log(`Workspace: ${process.env.GITHUB_WORKSPACE}`);
   console.log(context);
@@ -14,13 +12,13 @@ async function main(github, context, core) {
   console.log(github);
 
   try {
-    await uploadArtifact(artifact, artifactName, artifactPath);
+    await uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel);
   } catch (error) {
     core.setFailed(error.message);
   }
 }
 
-async function uploadArtifact(artifactClient, artifactName, artifactPath) {
+async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
   if (hasGitFolderWithGitHubRunnerToken(artifactPath)) {
     throw new Error("GITHUB_TOKEN must not be uploaded inside artifacts.");
   }
