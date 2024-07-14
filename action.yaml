@@ -81,5 +81,5 @@ runs:
       with:
          script: |
           const script = require('${{github.action_path}}/index.js')
-          await script({github, context, core})
+          
      
