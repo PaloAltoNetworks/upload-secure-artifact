@@ -4,6 +4,7 @@ This GitHub Action scans artifacts for secrets using [truffleHog](https://github
 
 ## Features
 
+- Compatible with upload-artifact v4
 - Alerts users if any secrets are detected
 - Prevents uploading artifacts if secrets are found
 - Wraps around the `upload-artifact` GitHub action for seamless integration
@@ -32,38 +33,40 @@ jobs:
      	 path: /output
 
 ```
-## Inputs
+## Inputs (Original upload-artifact action)
 
-- name
+* name
 
-	•	Description: Artifact name.
-	•	Default: artifact
+	-	Description: Artifact name.
+	-	Default: artifact
 
-- path
+* path
 
-	•	Description: A file, directory, or wildcard pattern that describes what to upload.
-	•	Required: true
+	-	Description: A file, directory, or wildcard pattern that describes what to upload.
+	-	Required: true
 
-- scan-only-github-secrets
+* retention-days
 
-	•	Description: If true, uses Trufflehog’s GitHub detector only while ignoring the rest of the detectors.
-	•	Default: false
+	-	Description: Duration after which the artifact will expire in days. A value of 0 means using the default retention. The retention period can be:
+	-	Minimum: 1 day
+	-	Maximum: 90 days (unless changed from the repository settings page).
 
-- retention-days
+* compression-level
 
-	•	Description: Duration after which the artifact will expire in days. A value of 0 means using the default retention. The retention period can be:
-	•	Minimum: 1 day
-	•	Maximum: 90 days (unless changed from the repository settings page).
-
-- compression-level
-
-	•	Description: The level of compression for Zlib to be applied to the artifact archive. The value can range from 0 to 9:
-	•	0: No compression
-	•	1: Best speed
-	•	6: Default compression (same as GNU Gzip)
-	•	9: Best compression
+	-	Description: The level of compression for Zlib to be applied to the artifact archive. The value can range from 0 to 9:
+	-	0: No compression
+	-	1: Best speed
+	-	6: Default compression (same as GNU Gzip)
+	-	9: Best compression
 Higher levels will result in better compression but will take longer to complete. For large files that are not easily compressed, a value of 0 is recommended for significantly faster uploads.
-	•	Default: 6
+	-	Default: 6
+
+## Custom Inputs
+
+* scan-only-github-secrets
+
+	-	Description: If true, uses Trufflehog’s GitHub detector only while ignoring the rest of the detectors.
+	-	Default: false
 
 ## Outputs
 
