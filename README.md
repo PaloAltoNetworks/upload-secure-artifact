@@ -27,10 +27,10 @@ jobs:
       uses: actions/checkout@v4
 
 
-     - uses: cider-research-testing/upload-artifact-secure@main
+    - uses: cider-research-testing/upload-artifact-secure@main
        with:
-	name: python-build
-	path: /output
+         name: python-build
+     	 path: /output
 
 ```
 ## Inputs
