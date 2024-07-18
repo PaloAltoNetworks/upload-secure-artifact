@@ -50,7 +50,7 @@ runs:
 
     - name: Secrets Scanning 
       run: |
-          detectors=$([ "${{ inputs.scan_only_github_secrets}}" = 'true' ] && echo "github" || echo "all")
+          detectors=$([ "${{ inputs.scan_only_github_secrets}}" = true ] && echo "github" || echo "all")
           echo $detectors
           docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail --include-detectors="$detectors"
           
