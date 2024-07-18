@@ -54,11 +54,6 @@ jobs:
 
   Contributions are welcome! Please open an issue or submit a pull request if you have any improvements or suggestions.
 
-## Acknowledgments
-
-  - This action uses [truffleHog](https://github.com/trufflesecurity/trufflehog) to scan for secrets.
-  - The artifact upload functionality is based on the [@actions/artifact](https://www.npmjs.com/package/@actions/artifact) libary that powers [upload-artifact](https://github.com/actions/upload-artifact) GitHub action.
-
 ## Contact
 
   For any questions or support, please open an issue on the GitHub repository.
