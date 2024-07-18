@@ -1,10 +1,9 @@
-# TruffleHog Secret Scan and Upload Artifact GitHub Action
+# Upload Artifact Secure
 
-This GitHub Action scans your repository for secrets using `truffleHog` before uploading any artifacts. By wrapping the original `upload-artifact` GitHub action, it ensures that no sensitive information is included in the uploaded artifacts.
+This GitHub Action scans artifacts for secrets using [truffleHog](https://github.com/trufflesecurity/trufflehog) before uploading them. The upload functionality is done by wrapping the original [upload-artifact](https://github.com/actions/upload-artifact) GitHub action, ensuring that no sensitive information is included in the uploaded artifacts.
 
 ## Features
 
-- Scans repository for secrets using `truffleHog`
 - Alerts users if any secrets are detected
 - Prevents uploading artifacts if secrets are found
 - Wraps around the `upload-artifact` GitHub action for seamless integration
