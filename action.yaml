@@ -47,14 +47,13 @@ outputs:
 runs:
   using: "composite"
   steps:
-  
-    #- name: Run trufflehog scan
-    #  uses: trufflesecurity/trufflehog@main
-    #  with:
-    #    extra_args: "filesystem"
 
     - name: Secrets Scanning 
-      run: docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail
+      run: |
+          detectors=$([ "${{ inputs.scan_only_github_secrets}}" = 'true' ] && echo "github" || echo "all")
+          echo $detectors
+          docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail --include-detectors="$detectors"
+          
       shell: bash 
             
     - name: Set up Node.js
