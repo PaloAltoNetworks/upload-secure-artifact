@@ -37,7 +37,7 @@ jobs:
 
 - original upload-artifact inputs can be found [here](https://github.com/actions/upload-artifact?tab=readme-ov-file#inputs)
 
-- scan-only-github-secrets
+- scan-only-github-secrets (Optional)
 
 	-	Description: If true, uses Trufflehog’s GitHub detector only while ignoring the rest of the detectors.
 	-	Default: false
