@@ -26,12 +26,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Upload Artifacts
-      if: steps.trufflehog.outputs.secrets_found == 'false'
-      uses: actions/upload-artifact-secure@v1
-      with:
-        name: my-artifact
-        path: path/to/artifacts
+
+     - uses: cider-research-testing/upload-artifact-secure@main
+       with:
+	  name: python-build
+	  path: /output
+
 ```
 ## Inputs
 
