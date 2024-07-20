@@ -53,7 +53,7 @@ runs:
           detectors=$([ '${{ inputs.scan-only-github-secrets }}' = true ] && echo "github" || echo "all")
           echo $detectors
           #docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail --include-detectors="$detectors"
-          docker run --tty --volume /$(pwd)/${{ inputs.path }}:/scan --workdir /tf bridgecrew/checkov --enable-secret-scan-all-files -check CKV_SECRET_1,CKV_SECRET_2,CKV_SECRET_3,CKV_SECRET_4,CKV_SECRET_5,CKV_SECRET_6,CKV_SECRET_7,CKV_SECRET_8,CKV_SECRET_9,CKV_SECRET_11,CKV_SECRET_12,CKV_SECRET_13,CKV_SECRET_14,CKV_SECRET_15,CKV_SECRET_16,CKV_SECRET_17,CKV_SECRET_18,CKV_SECRET_19 --directory /scan
+          docker run --tty --volume /$(pwd)/${{ inputs.path }}:/scan --workdir /tf bridgecrew/checkov --enable-secret-scan-all-files --check CKV_SECRET_1,CKV_SECRET_2,CKV_SECRET_3,CKV_SECRET_4,CKV_SECRET_5,CKV_SECRET_6,CKV_SECRET_7,CKV_SECRET_8,CKV_SECRET_9,CKV_SECRET_11,CKV_SECRET_12,CKV_SECRET_13,CKV_SECRET_14,CKV_SECRET_15,CKV_SECRET_16,CKV_SECRET_17,CKV_SECRET_18,CKV_SECRET_19 --directory /scan
           
       shell: bash 
             
