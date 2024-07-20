@@ -53,7 +53,7 @@ runs:
           detectors=$([ '${{ inputs.scan-only-github-secrets }}' = true ] && echo "github" || echo "all")
           echo $detectors
           #docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail --include-detectors="$detectors"
-          docker run --tty --volume /$(pwd)/${{ inputs.path }}:/scan --workdir /tf bridgecrew/checkov --directory /scan
+          docker run --tty --volume /$(pwd)/${{ inputs.path }}:/scan --workdir /tf bridgecrew/checkov --enable-secret-scan-all-files --directory /scan
           
       shell: bash 
             
