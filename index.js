@@ -1,4 +1,6 @@
 const { DefaultArtifactClient } = require("@actions/artifact");
+const fs = require('fs');
+const path = require('path');
 const core = require('@actions/core');
 
 async function main(github, context, artifactName,artifactPath,retentionDays,compressionLevel) {
@@ -30,11 +32,38 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
   );
 }
 
+
+function findGitFolder(startPath) {
+    if (!fs.existsSync(startPath)) {
+        console.log("Start path does not exist.");
+        return null;
+    }
+
+    const files = fs.readdirSync(startPath);
+
+    for (let i = 0; i < files.length; i++) {
+        const filePath = path.join(startPath, files[i]);
+
+        if (files[i] === '.git' && fs.statSync(filePath).isDirectory()) {
+            return filePath;
+        }
+
+        if (fs.statSync(filePath).isDirectory()) {
+            const result = findGitFolder(filePath);
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    return null;
+}
+
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   const fs = require('fs');
   const path = require('path');
 
-  const gitDir = path.join(pathToCheck, '.git');
+  const gitDir = findGitFolder(pathToCheck, '.git');
   const configFile = path.join(gitDir, 'config');
   const regex = new RegExp('eC1hY2Nlc3MtdG9rZW46Z2hz', 'i');
 
