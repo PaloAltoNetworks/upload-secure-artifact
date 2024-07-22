@@ -49,9 +49,6 @@ jobs:
 
 - secrets_found: Indicates whether any secrets were found (true or false).
 
-## License
-
-  This project is licensed under the AGPL-3.0 License. See the LICENSE file for more information.
 
 ## Contributing
 
