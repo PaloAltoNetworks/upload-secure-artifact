@@ -54,11 +54,11 @@ runs:
           echo $detectors
           #docker run --rm -v /$(pwd)/${{ inputs.path }}:/scan trufflesecurity/trufflehog filesystem /scan --fail --include-detectors="$detectors"
           #docker run --tty --volume /$(pwd)/${{ inputs.path }}:/scan --workdir /tf bridgecrew/checkov --enable-secret-scan-all-files --check CKV_SECRET_1,CKV_SECRET_2,CKV_SECRET_3,CKV_SECRET_4,CKV_SECRET_5,CKV_SECRET_6,CKV_SECRET_7,CKV_SECRET_8,CKV_SECRET_9,CKV_SECRET_11,CKV_SECRET_12,CKV_SECRET_13,CKV_SECRET_14,CKV_SECRET_15,CKV_SECRET_16,CKV_SECRET_17,CKV_SECRET_18,CKV_SECRET_19 --directory /scan
-          docker run /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks:latest detect --no-git -v --source /scan
+          docker run /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks@sha256:sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git -v --source /scan
       shell: bash 
             
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
       with:
         node-version: 21
       
@@ -66,7 +66,7 @@ runs:
       shell: bash 
       run: npm install ${{github.action_path}}
 
-    - uses: actions/github-script@v7
+    - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
       with:
          script: |       
           const script = require('${{github.action_path}}/index.js')
