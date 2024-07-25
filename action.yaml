@@ -50,7 +50,9 @@ runs:
 
     - name: Secrets Scanning 
       if: ${{ inputs.scan-only-github-secrets }} == 'false'
-      run: docker run -v /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+      run: |
+        echo ${{ inputs.scan-only-github-secrets }}
+        docker run -v /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
       shell: bash 
             
     - name: Set up Node.js
