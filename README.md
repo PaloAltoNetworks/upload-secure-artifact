@@ -14,7 +14,7 @@ This GitHub Action scans artifacts for secrets using [gitleaks](https://github.c
 
 ## Usage
 
-To use this action* add it to your GitHub Actions workflow file:
+To use this action add it to your GitHub Actions workflow file:
 
 ```yaml
 
@@ -25,7 +25,8 @@ To use this action* add it to your GitHub Actions workflow file:
 
 ```
 
-* _Pin your actions for a safer world_
+** _Pin your actions for a safer world_
+
 ## Inputs
 
 - original upload-artifact inputs can be found [here](https://github.com/actions/upload-artifact?tab=readme-ov-file#inputs)
