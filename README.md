@@ -17,18 +17,6 @@ This GitHub Action scans artifacts for secrets using [gitleaks](https://github.c
 To use this action, add it to your GitHub Actions workflow file. Below is an example configuration:
 
 ```yaml
-name: Secret Scan and Upload Artifacts
-
-on: [push, pull_request]
-
-jobs:
-  scan-and-upload:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
 
     - uses: cider-research-testing/upload-artifact-secure@main
        with:
