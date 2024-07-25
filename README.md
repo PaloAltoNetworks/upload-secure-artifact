@@ -30,12 +30,12 @@ To use this action, add it to your GitHub Actions workflow file. Below is an exa
 
 - scan-only-github-secrets (Optional)
 
-	-	Description: If true, uses Trufflehog’s GitHub detector only while ignoring the rest of the detectors.
+	-	Description: If true, skip the gitleaks secrets scanning and only perform scanning for the runner token in the local .git folder.
 	-	Default: false
 
 ## Outputs
 
-- secrets_found: Indicates whether any secrets were found (true or false).
+-  artifact-id, artifact-url: supplied by the upload-artifact action
 
 
 ## Contributing
