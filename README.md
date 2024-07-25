@@ -18,7 +18,7 @@ To use this action add it to your GitHub Actions workflow file:
 
 ```yaml
 
-    - uses: cider-research-testing/upload-artifact-secure@main
+    - uses: cider-research/upload-artifact-secure@main
        with:
          name: python-build
      	 path: /output
