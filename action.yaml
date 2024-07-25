@@ -1,5 +1,5 @@
-name: Trufflehog and Node.js Composite Action
-description: A composite action that runs trufflehog for scanning secrets and then executes an index.js file.
+name: This GitHub Action scans artifacts for secrets using gitleaks before uploading them.
+description: A composite action that runs gitleaks for scanning secrets and then executes an index.js file.
 inputs:
   name:
     description: 'Artifact name'
@@ -9,7 +9,7 @@ inputs:
     required: true
   scan-only-github-secrets:
     description: >
-      If true Using Trufflehog GitHub detector only while ignoring the rest of detectors    
+      If true don't use GitLeaks to scan secrets    
     default: 'false'
   retention-days:
     description: >
