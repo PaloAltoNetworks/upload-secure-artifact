@@ -60,10 +60,6 @@ runs:
       with:
         node-version: 21
 
-    - name: ls
-      shell: bash 
-      run: ls ${{ github.action_path }}
-      
     - name: npm install 
       shell: bash 
       run: | 
