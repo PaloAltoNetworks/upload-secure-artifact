@@ -67,7 +67,8 @@ runs:
     - name: npm install 
       shell: bash 
       run: | 
-          npm install ${{ github.action_path }}
+          cd ${{ github.action_path }}
+          npm install 
           npm list
 
     - name: Set node_modules path
