@@ -1,5 +1,5 @@
 {
-  "name": "github-upload-artifact",
+  "name": "upload-secure-artifact",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -7,7 +7,7 @@
   },
   "keywords": [],
   "author": "Yaron Avital",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@actions/artifact": "^2.1.7",
     "@actions/cache": "^3.2.4",
@@ -15,5 +15,5 @@
     "dotenv": "^16.4.4",
     "terminal-tasks": "^0.0.5"
   },
-  "description": ""
+  "description": "GitHub Action scans artifacts for secrets using gitleaks before uploading them."
 }
