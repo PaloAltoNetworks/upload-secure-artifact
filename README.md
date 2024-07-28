@@ -1,7 +1,7 @@
 <img src="logo.jpeg" width="250"> 
 
 
-# Upload Artifact Secure
+# Upload secure artifact
 
 This GitHub Action scans artifacts for secrets using [gitleaks](https://github.com/gitleaks/gitleaks) before uploading them. The upload functionality is done by wrapping the original [upload-artifact](https://github.com/actions/upload-artifact) GitHub action, ensuring that no sensitive information is included in the uploaded artifacts.
 
