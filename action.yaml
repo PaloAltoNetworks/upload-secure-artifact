@@ -66,7 +66,9 @@ runs:
       
     - name: npm install 
       shell: bash 
-      run: npm install ${{ github.action_path }}
+      run: | 
+          npm install ${{ github.action_path }}
+          npm list
 
     - name: Set node_modules path
       run: echo "NODE_MODULES_PATH=${{ github.action_path }}/node_modules" >> $GITHUB_ENV
