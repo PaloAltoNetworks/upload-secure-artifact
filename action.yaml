@@ -62,11 +62,11 @@ runs:
 
     - name: ls
       shell: bash 
-      run: ls ${{github.action_path}
+      run: ls ${{ github.action_path }}
       
     - name: npm install 
       shell: bash 
-      run: npm install ${{github.action_path}}
+      run: npm install ${{ github.action_path }}
 
     - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
       with:
