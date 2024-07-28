@@ -1,4 +1,4 @@
-name: This GitHub Action scans artifacts for secrets using gitleaks before uploading them.
+name: upload-secure-artifact
 description: A composite action that runs gitleaks for scanning secrets and then executes an index.js file.
 inputs:
   name:
