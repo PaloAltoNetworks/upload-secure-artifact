@@ -1,4 +1,4 @@
-<img src="logo.jpeg" width="250"> 
+<img src="logo-artifact.jpeg" width="250"> 
 
 
 # Upload secure artifact
