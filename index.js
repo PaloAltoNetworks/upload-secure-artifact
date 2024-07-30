@@ -18,8 +18,9 @@ async function main(github, context, artifactName,artifactPath,retentionDays,com
 }
 
 async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
-  if (hasGitFolderWithGitHubRunnerToken(artifactPath)) {
-    throw new Error("Error: Do not upload the GITHUB_TOKEN inside artifacts.");
+  foundPath = hasGitFolderWithGitHubRunnerToken(artifactPath)
+  if (foundPath) {
+    throw new Error(`Found GITHUB_TOKEN inside the artifact at path ${foundPath}`);
   }
 
   const filesToUpload = await populateFilesWithFullPath(artifactPath);
@@ -72,11 +73,11 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
       const configContent = fs.readFileSync(configFile, 'utf-8');
       return regex.test(configContent);
     } else {
-      return false;
+      return configFile;
     }
   } catch (error) {
     console.error('Error checking Git config:', error);
-    return false;
+    return null;
   }
 }
 
