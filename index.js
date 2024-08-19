@@ -16,7 +16,7 @@ async function main(github, context, artifactName,artifactPath,retentionDays,com
 async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
 
   if (!fs.existsSync(artifactPath)){
-      console.log("artifact path does not exists");
+    console.warn("No files were found with the provided path: /not. No artifacts will be uploaded.");
     return
   }
   
