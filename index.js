@@ -14,6 +14,12 @@ async function main(github, context, artifactName,artifactPath,retentionDays,com
 }
 
 async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
+
+  if (!fs.existsSync(artifactPath)){
+      console.log("artifact path does not exists");
+    return
+  }
+  
   foundPath = hasGitFolderWithGitHubRunnerToken(artifactPath)
   if (foundPath) {
     throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
