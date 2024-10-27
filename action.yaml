@@ -28,6 +28,20 @@ inputs:
       Higher levels will result in better compression, but will take longer to complete.
       For large files that are not easily compressed, a value of 0 is recommended for significantly faster uploads.
     default: '6'
+  if-no-files-found:
+    description: >
+      The desired behavior if no files are found using the provided path.
+
+      Available Options:
+        warn: Output a warning but do not fail the action
+        error: Fail the action with an error message
+        ignore: Do not output any warnings or errors, the action does not fail
+    default: 'warn'
+  include-hidden-files:
+    description: >
+      If true, hidden files will be included in the artifact.
+      If false, hidden files will be excluded from the artifact.
+    default: 'false'
 
 outputs:
   artifact-id:
@@ -50,8 +64,19 @@ runs:
 
     - name: Secrets Scanning 
       if: inputs.scan-only-runner-token == 'false'
-      run: docker run -v /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
-      shell: bash 
+      run: |
+        INPUT_PATH="${{ inputs.path }}"
+        OUTPUT_PATH=""
+        for path in $(echo $INPUT_PATH | tr "|" "\n")
+        do        
+          OUTPUT_PATH+=$path
+          OUTPUT_PATH+=";"
+          echo "Scanning path $path"
+          cd $(pwd)
+          docker run -v $path:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+        done
+        echo "PATH_ARR=$OUTPUT_PATH" >> $GITHUB_ENV
+      shell: bash
             
     - name: Set up Node.js
       uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
@@ -66,9 +91,6 @@ runs:
          
     - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
       with:
-         script: |       
-          const script = require('${{github.action_path}}/index.js')
-          script({"github":github, "context":context,artifactName:"${{ inputs.name }}",artifactPath:"${{ inputs.path }}",retentionDays:"${{ inputs.retention-days }}",compressionLevel:"${{ inputs.compression-level }}"})
-
-          
-     
+         script: |                 
+          const script = require('${{github.action_path}}/index.js')    
+          script({"github":github, "context":context,artifactName:"${{ inputs.name }}",artifactPath:"${{ env.PATH_ARR }}",retentionDays:"${{ inputs.retention-days }}",compressionLevel:"${{ inputs.compression-level }}",ifNoFilesFound:"${{ inputs.if-no-files-found }}",includeHiddenFiles:"${{ inputs.include-hidden-files }}"})
