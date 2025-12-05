@@ -65,7 +65,6 @@ runs:
     - name: Secrets Scanning 
       if: inputs.scan-only-runner-token == 'false'
       run: |
-        INPUT_PATH="${{ inputs.path }}"
         OUTPUT_PATH=""
         for path in $(echo $INPUT_PATH | tr "|" "\n")
         do        
@@ -77,6 +76,8 @@ runs:
         done
         echo "PATH_ARR=$OUTPUT_PATH" >> $GITHUB_ENV
       shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
             
     - name: Set up Node.js
       uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
@@ -92,5 +93,17 @@ runs:
     - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
       with:
          script: |                 
-          const script = require('${{github.action_path}}/index.js')    
-          script({"github":github, "context":context,artifactName:"${{ inputs.name }}",artifactPath:"${{ env.PATH_ARR }}",retentionDays:"${{ inputs.retention-days }}",compressionLevel:"${{ inputs.compression-level }}",ifNoFilesFound:"${{ inputs.if-no-files-found }}",includeHiddenFiles:"${{ inputs.include-hidden-files }}"})
+          const script = require('${{github.action_path}}/index.js')
+          const name = process.env.NAME;
+          const path_arr = process.env.PATH_ARR
+          const retention_days = process.env.RETENTION_DAYS;
+          const compression_level = process.env.COMPRESSION_LEVEL;
+          const if_no_files_found = process.env.IF_NO_FILES_FOUND;
+          const include_hidden_files = process.env.INCLUDE_HIDDEN_FILES;
+          script({"github":github, "context":context,artifactName:name,artifactPath:"${{ env.PATH_ARR }}",retentionDays:retention_days,compressionLevel:compression_level,ifNoFilesFound:if_no_files_found,includeHiddenFiles:include_hidden_files})
+      env:
+        NAME: ${{ inputs.name }}
+        RETENTION_DAYS: ${{ inputs.retention-days }}
+        COMPRESSION_LEVEL: ${{ inputs.compression-level }}
+        IF_NO_FILES_FOUND: ${{ inputs.if-no-files-found }}
+        INCLUDE_HIDDEN_FILES: ${{ inputs.include-hidden-files }}
