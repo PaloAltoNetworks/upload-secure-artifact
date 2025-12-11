@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const core = require('@actions/core');
 
-async function main(github, context, artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles) {
+async function main(github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
 
   const artifactClient = new DefaultArtifactClient();
   try {
-    await uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel,ifNoFilesFound,includeHiddenFiles);
+    await uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -18,7 +18,7 @@ function isFile(inputPath) {
   return stats.isFile();
 }
 
-async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel,ifNoFilesFound,includeHiddenFiles) {
+async function uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
 
 
   const paths = artifactPath.split(';'); // Split by `;`
@@ -34,7 +34,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
       filesToUpload = filesToUpload.concat(entry); // Accumulate file
     }
     else {
-      const files = await populateFilesWithFullPath(entry.trim(),includeHiddenFiles); // Get files for each path
+      const files = await populateFilesWithFullPath(entry.trim(), includeHiddenFiles); // Get files for each path
       filesToUpload = filesToUpload.concat(files); // Accumulate files
       if (hasGitFolderWithGitHubRunnerToken(artifactPath))
         throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
@@ -132,7 +132,7 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   }
 }
 
-async function populateFilesWithFullPath(rootPath,includeHiddenFiles) {
+async function populateFilesWithFullPath(rootPath, includeHiddenFiles) {
   const fs = require('fs').promises; // Use promises for cleaner async/await usage
   const path = require('path');
   const files = [];
@@ -153,7 +153,7 @@ async function populateFilesWithFullPath(rootPath,includeHiddenFiles) {
       }
     } else if (stats.isDirectory()) {
       // Recursively collect files from subdirectories
-      files.push(...(await populateFilesWithFullPath(filePath,includeHiddenFiles)));
+      files.push(...(await populateFilesWithFullPath(filePath, includeHiddenFiles)));
     }
   }
 
@@ -165,6 +165,6 @@ function isHiddenFile(filePath) {
   return path.basename(filePath).startsWith('.');
 }
 
-module.exports = function ({ github, context, artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) {
-  main(github, context, artifactName,artifactPath,retentionDays,compressionLevel, ifNoFilesFound, includeHiddenFiles);
+module.exports = function ({ github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles }) {
+  main(github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles);
 }
