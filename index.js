@@ -29,11 +29,11 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
      if (!fs.existsSync(path)) {
          continue;
      }
-    
+
     if (isFile(path)) {
           filesToUpload = filesToUpload.concat(path); // Accumulate file
     }
-    else {      
+    else {
       const files = await populateFilesWithFullPath(path.trim(),includeHiddenFiles); // Get files for each path
       filesToUpload = filesToUpload.concat(files); // Accumulate files
       if (hasGitFolderWithGitHubRunnerToken(artifactPath))
@@ -65,7 +65,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
 
     return
   }
-          
+
   await artifactClient.uploadArtifact(
     artifactName,
     filesToUpload,
@@ -120,7 +120,7 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   try {
     if (fs.existsSync(gitDir) && fs.existsSync(configFile)) {
       const configContent = fs.readFileSync(configFile, 'utf-8');
-      if (regex.test(configContent)) {      
+      if (regex.test(configContent)) {
           return configFile;
       }
     }
@@ -167,6 +167,6 @@ function isHiddenFile(filePath) {
   return path.basename(filePath).startsWith('.');
 }
 
-module.exports = function ({ github, context , artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) { 
+module.exports = function ({ github, context , artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) {
    main(github, context, artifactName,artifactPath,retentionDays,compressionLevel, ifNoFilesFound, includeHiddenFiles);
 }
