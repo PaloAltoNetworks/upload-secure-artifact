@@ -167,6 +167,6 @@ function isHiddenFile(filePath) {
   return path.basename(filePath).startsWith('.');
 }
 
-module.exports = function ({ github, context , artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) {
+module.exports = function ({ github, context, artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) {
   main(github, context, artifactName,artifactPath,retentionDays,compressionLevel, ifNoFilesFound, includeHiddenFiles);
 }
