@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const core = require('@actions/core');
 
-async function main(github, context, artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles) {
+async function main(github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
 
   const artifactClient = new DefaultArtifactClient();
   try {
-    await uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel,ifNoFilesFound,includeHiddenFiles);
+    await uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -18,23 +18,23 @@ function isFile(inputPath) {
   return stats.isFile();
 }
 
-async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel,ifNoFilesFound,includeHiddenFiles) {
+async function uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
 
 
   const paths = artifactPath.split(';'); // Split by `;`
   let filesToUpload = [];
 
-  for (const path of paths) {
+  for (const entry of paths) {
 
-     if (!fs.existsSync(path)) {
-         continue;
-     }
-    
-    if (isFile(path)) {
-          filesToUpload = filesToUpload.concat(path); // Accumulate file
+    if (!fs.existsSync(entry)) {
+      continue;
     }
-    else {      
-      const files = await populateFilesWithFullPath(path.trim(),includeHiddenFiles); // Get files for each path
+
+    if (isFile(entry)) {
+      filesToUpload = filesToUpload.concat(entry); // Accumulate file
+    }
+    else {
+      const files = await populateFilesWithFullPath(entry.trim(), includeHiddenFiles); // Get files for each path
       filesToUpload = filesToUpload.concat(files); // Accumulate files
       if (hasGitFolderWithGitHubRunnerToken(artifactPath))
         throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
@@ -61,11 +61,11 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
         )
         break
       }
-     }
+    }
 
     return
   }
-          
+
   await artifactClient.uploadArtifact(
     artifactName,
     filesToUpload,
@@ -77,73 +77,68 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
 
 function findGitFolder(startPath) {
 
-    try
-    {
-      if (!fs.existsSync(startPath)) {
-          return null;
-      }
-
-      const files = fs.readdirSync(startPath);
-
-      for (let i = 0; i < files.length; i++) {
-          const filePath = path.join(startPath, files[i]);
-
-          if (files[i] === '.git' && fs.statSync(filePath).isDirectory()) {
-              return filePath;
-          }
-
-          if (fs.statSync(filePath).isDirectory()) {
-              const result = findGitFolder(filePath);
-              if (result) {
-                  return result;
-              }
-          }
-      }
-    }
-    catch (exceptionVar) {
-      console.log(exceptionVar)
+  try {
+    if (!fs.existsSync(startPath)) {
+      return null;
     }
 
-    return null;
+    const files = fs.readdirSync(startPath);
+
+    for (let i = 0; i < files.length; i++) {
+      const filePath = path.join(startPath, files[i]);
+
+      if (files[i] === '.git' && fs.statSync(filePath).isDirectory()) {
+        return filePath;
+      }
+
+      if (fs.statSync(filePath).isDirectory()) {
+        const result = findGitFolder(filePath);
+        if (result) {
+          return result;
+        }
+      }
+    }
+  }
+  catch (exceptionVar) {
+    console.log(exceptionVar)
+  }
+
+  return null;
 }
 
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
-  const fs = require('fs');
-  const path = require('path');
-  try
-  {
-  const gitDir = findGitFolder(pathToCheck, '.git');
-  if (gitDir) {
-  const configFile = path.join(gitDir, 'config');
-  const regex = new RegExp('eC1hY2Nlc3MtdG9rZW46Z2hz', 'i');
-
   try {
-    if (fs.existsSync(gitDir) && fs.existsSync(configFile)) {
-      const configContent = fs.readFileSync(configFile, 'utf-8');
-      if (regex.test(configContent)) {      
-          return configFile;
+    const gitDir = findGitFolder(pathToCheck, '.git');
+    if (gitDir) {
+    const configFile = path.join(gitDir, 'config');
+    const regex = new RegExp('eC1hY2Nlc3MtdG9rZW46Z2hz', 'i');
+
+    try {
+      if (fs.existsSync(gitDir) && fs.existsSync(configFile)) {
+        const configContent = fs.readFileSync(configFile, 'utf-8');
+        if (regex.test(configContent)) {
+            return configFile;
+        }
+      }
+      } catch (error) {
+        console.error('Error checking Git config:', error);
+        return null;
       }
     }
-    } catch (error) {
-      console.error('Error checking Git config:', error);
-      return null;
-    }
-  }
   } catch (err) {
     console.log(err)
   }
 }
 
-async function populateFilesWithFullPath(rootPath,includeHiddenFiles) {
-  const fs = require('fs').promises; // Use promises for cleaner async/await usage
-  const path = require('path');
+async function populateFilesWithFullPath(rootPath, includeHiddenFiles) {
+  const fsPromises = fs.promises; // Use promises for cleaner async/await usage
   const files = [];
 
-  const dirEntries = await fs.readdir(rootPath);
+  const dirEntries = await fsPromises.readdir(rootPath);
   for (const fileName of dirEntries) {
     const filePath = path.join(rootPath, fileName);
 
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     if (stats.isFile()) {
       if (isHiddenFile(filePath)){
         if (includeHiddenFiles){
@@ -155,7 +150,7 @@ async function populateFilesWithFullPath(rootPath,includeHiddenFiles) {
       }
     } else if (stats.isDirectory()) {
       // Recursively collect files from subdirectories
-      files.push(...(await populateFilesWithFullPath(filePath,includeHiddenFiles)));
+      files.push(...(await populateFilesWithFullPath(filePath, includeHiddenFiles)));
     }
   }
 
@@ -163,10 +158,9 @@ async function populateFilesWithFullPath(rootPath,includeHiddenFiles) {
 }
 
 function isHiddenFile(filePath) {
-  const path = require('path');
   return path.basename(filePath).startsWith('.');
 }
 
-module.exports = function ({ github, context , artifactName,artifactPath,retentionDays,compressionLevel,ifNoFilesFound, includeHiddenFiles }) { 
-   main(github, context, artifactName,artifactPath,retentionDays,compressionLevel, ifNoFilesFound, includeHiddenFiles);
+module.exports = function ({ github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles }) {
+  main(github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles);
 }
