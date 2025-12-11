@@ -108,7 +108,6 @@ function findGitFolder(startPath) {
 
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   const fs = require('fs');
-  const path = require('path');
   try {
     const gitDir = findGitFolder(pathToCheck, '.git');
     if (gitDir) {
@@ -134,7 +133,6 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
 
 async function populateFilesWithFullPath(rootPath, includeHiddenFiles) {
   const fs = require('fs').promises; // Use promises for cleaner async/await usage
-  const path = require('path');
   const files = [];
 
   const dirEntries = await fs.readdir(rootPath);
@@ -161,7 +159,6 @@ async function populateFilesWithFullPath(rootPath, includeHiddenFiles) {
 }
 
 function isHiddenFile(filePath) {
-  const path = require('path');
   return path.basename(filePath).startsWith('.');
 }
 
