@@ -77,8 +77,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
 
 function findGitFolder(startPath) {
 
-  try
-  {
+  try {
     if (!fs.existsSync(startPath)) {
       return null;
     }
@@ -110,8 +109,7 @@ function findGitFolder(startPath) {
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   const fs = require('fs');
   const path = require('path');
-  try
-  {
+  try {
     const gitDir = findGitFolder(pathToCheck, '.git');
     if (gitDir) {
     const configFile = path.join(gitDir, 'config');
