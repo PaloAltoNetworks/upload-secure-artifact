@@ -107,7 +107,6 @@ function findGitFolder(startPath) {
 }
 
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
-  const fs = require('fs');
   try {
     const gitDir = findGitFolder(pathToCheck, '.git');
     if (gitDir) {
