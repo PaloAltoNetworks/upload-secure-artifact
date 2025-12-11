@@ -32,7 +32,7 @@ To use the action, add it to your GitHub Actions workflow file:
 
 ## Inputs
 
-- original upload-artifact inputs can be found [here](https://github.com/actions/upload-artifact?tab=readme-ov-file#inputs)
+- see [original upload-artifact inputs](https://github.com/actions/upload-artifact?tab=readme-ov-file#inputs)
 
 - scan-only-runner-token (Optional)
 
