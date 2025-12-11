@@ -131,14 +131,14 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
 }
 
 async function populateFilesWithFullPath(rootPath, includeHiddenFiles) {
-  const fs = require('fs').promises; // Use promises for cleaner async/await usage
+  const fsPromises = fs.promises; // Use promises for cleaner async/await usage
   const files = [];
 
-  const dirEntries = await fs.readdir(rootPath);
+  const dirEntries = await fsPromises.readdir(rootPath);
   for (const fileName of dirEntries) {
     const filePath = path.join(rootPath, fileName);
 
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     if (stats.isFile()) {
       if (isHiddenFile(filePath)){
         if (includeHiddenFiles){
