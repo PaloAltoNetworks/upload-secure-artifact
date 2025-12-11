@@ -24,17 +24,17 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
   const paths = artifactPath.split(';'); // Split by `;`
   let filesToUpload = [];
 
-  for (const path of paths) {
+  for (const entry of paths) {
 
-    if (!fs.existsSync(path)) {
+    if (!fs.existsSync(entry)) {
       continue;
     }
 
-    if (isFile(path)) {
-      filesToUpload = filesToUpload.concat(path); // Accumulate file
+    if (isFile(entry)) {
+      filesToUpload = filesToUpload.concat(entry); // Accumulate file
     }
     else {
-      const files = await populateFilesWithFullPath(path.trim(),includeHiddenFiles); // Get files for each path
+      const files = await populateFilesWithFullPath(entry.trim(),includeHiddenFiles); // Get files for each path
       filesToUpload = filesToUpload.concat(files); // Accumulate files
       if (hasGitFolderWithGitHubRunnerToken(artifactPath))
         throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
