@@ -53,56 +53,131 @@ outputs:
     description: >
       A download URL for the artifact that was just uploaded. Empty if the artifact upload failed.
 
-      This download URL only works for requests Authenticated with GitHub. Anonymous downloads will be prompted to first login. 
-      If an anonymous download URL is needed than a short time restricted URL can be generated using the download artifact API: https://docs.github.com/en/rest/actions/artifacts#download-an-artifact    
+      This download URL only works for requests Authenticated with GitHub. Anonymous downloads will be prompted to first login.
+      If an anonymous download URL is needed than a short time restricted URL can be generated using the download artifact API: https://docs.github.com/en/rest/actions/artifacts#download-an-artifact
 
       This URL will be valid for as long as the artifact exists and the workflow run and repository exists. Once an artifact has expired this URL will no longer work.
-      Common uses cases for such a download URL can be adding download links to artifacts in descriptions or comments on pull requests or issues. 
+      Common uses cases for such a download URL can be adding download links to artifacts in descriptions or comments on pull requests or issues.
 runs:
   using: "composite"
   steps:
-
-    - name: Secrets Scanning 
-      if: inputs.scan-only-runner-token == 'false'
-      run: |
-        OUTPUT_PATH=""
-        for path in $(echo $INPUT_PATH | tr "|" "\n")
-        do        
-          OUTPUT_PATH+=$path
-          OUTPUT_PATH+=";"
-          echo "Scanning path $path"
-          cd $(pwd)
-          docker run -v $path:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
-        done
-        echo "PATH_ARR=$OUTPUT_PATH" >> $GITHUB_ENV
+    - name: Prepare artifact paths
       shell: bash
       env:
         INPUT_PATH: ${{ inputs.path }}
-            
-    - name: Set up Node.js
-      uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
-      with:
-        node-version: 20
+      run: |
+        node <<'NODE'
+        const crypto = require('crypto');
+        const fs = require('fs');
+        const path = require('path');
 
-    - name: npm install 
-      shell: bash 
-      run: | 
-          cd ${{ github.action_path }}
-          npm ci 
-         
-    - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
+        const input = process.env.INPUT_PATH || '';
+        if (input.includes('\0')) {
+          throw new Error('Artifact path input contains unsupported null bytes.');
+        }
+
+        const paths = input
+          .split(/[\r\n|]+/)
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0)
+          .map((value) => path.resolve(value));
+        let delimiter;
+        do {
+          delimiter = `ARTIFACT_PATHS_${crypto.randomBytes(16).toString('hex')}`;
+        } while (paths.some((value) => value.includes(delimiter)));
+
+        fs.appendFileSync(
+          process.env.GITHUB_ENV,
+          `ARTIFACT_PATHS<<${delimiter}\n${paths.join('\n')}\n${delimiter}\n`
+        );
+        NODE
+
+    - name: Secrets Scanning
+      if: inputs.scan-only-runner-token == 'false'
+      run: |
+        node <<'NODE'
+        const { spawnSync } = require('child_process');
+        const fs = require('fs');
+        const sanitizeForLog = (value) => JSON.stringify(value);
+
+        const paths = (process.env.ARTIFACT_PATHS || '')
+          .split(/\r?\n/)
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0);
+
+        for (const artifactPath of paths) {
+          if (!fs.existsSync(artifactPath)) {
+            continue;
+          }
+
+          if (process.platform !== 'win32' && artifactPath.includes(':')) {
+            console.error(`Artifact path contains unsupported ':' character: ${sanitizeForLog(artifactPath)}`);
+            process.exit(1);
+          }
+
+          console.log(`Scanning path ${sanitizeForLog(artifactPath)}`);
+          const result = spawnSync(
+            'docker',
+            [
+              'run',
+              '-v',
+              `${artifactPath}:/scan`,
+              'zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba',
+              'detect',
+              '--no-git',
+              '--source',
+              '/scan',
+            ],
+            { stdio: 'inherit' },
+          );
+
+          if (result.error) {
+            throw result.error;
+          }
+
+          if (result.status !== 0) {
+            process.exit(result.status || 1);
+          }
+        }
+        NODE
+      shell: bash
+      env:
+        ARTIFACT_PATHS: ${{ env.ARTIFACT_PATHS }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
-         script: |                 
+        node-version: 24
+
+    - name: npm install
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        npm ci
+
+    - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      with:
+        script: |
           const script = require('${{github.action_path}}/index.js')
-          const name = process.env.NAME;
-          const path_arr = process.env.PATH_ARR
-          const retention_days = process.env.RETENTION_DAYS;
-          const compression_level = process.env.COMPRESSION_LEVEL;
-          const if_no_files_found = process.env.IF_NO_FILES_FOUND;
-          const include_hidden_files = process.env.INCLUDE_HIDDEN_FILES;
-          script({"github":github, "context":context,artifactName:name,artifactPath:"${{ env.PATH_ARR }}",retentionDays:retention_days,compressionLevel:compression_level,ifNoFilesFound:if_no_files_found,includeHiddenFiles:include_hidden_files})
+          const artifactName = process.env.NAME;
+          const artifactPath = process.env.ARTIFACT_PATHS;
+          const retentionDays = process.env.RETENTION_DAYS;
+          const compressionLevel = process.env.COMPRESSION_LEVEL;
+          const ifNoFilesFound = process.env.IF_NO_FILES_FOUND;
+          const includeHiddenFiles = process.env.INCLUDE_HIDDEN_FILES;
+          script({
+            github,
+            context,
+            artifactName,
+            artifactPath,
+            retentionDays,
+            compressionLevel,
+            ifNoFilesFound,
+            includeHiddenFiles,
+          })
       env:
         NAME: ${{ inputs.name }}
+        ARTIFACT_PATHS: ${{ env.ARTIFACT_PATHS }}
         RETENTION_DAYS: ${{ inputs.retention-days }}
         COMPRESSION_LEVEL: ${{ inputs.compression-level }}
         IF_NO_FILES_FOUND: ${{ inputs.if-no-files-found }}
