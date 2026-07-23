@@ -56,9 +56,9 @@ runs:
         INPUT_PATH: ${{ inputs.path }}
             
     - name: Set up Node.js
-      uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
-        node-version: 20
+        node-version: 24
 
     - name: npm install 
       shell: bash 
@@ -66,7 +66,7 @@ runs:
           cd ${{ github.action_path }}
           npm ci 
          
-    - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
+    - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
          script: |
           const script = require('${{github.action_path}}/index.js')
