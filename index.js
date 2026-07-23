@@ -34,7 +34,11 @@ function parseArtifactPaths(artifactPath) {
 }
 
 function isFile(inputPath) {
-  return fs.lstatSync(inputPath).isFile();
+  try {
+    return fs.lstatSync(inputPath).isFile();
+  } catch (error) {
+    throw new Error(`Unable to inspect artifact path: ${inputPath}`);
+  }
 }
 
 async function uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound = DEFAULT_IF_NO_FILES_FOUND, includeHiddenFiles) {
@@ -78,7 +82,11 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
 
   const uploadOptions = {};
   const parsedRetentionDays = Number.parseInt(retentionDays, 10);
-  if (Number.isInteger(parsedRetentionDays) && parsedRetentionDays > 0) {
+  if (Number.isNaN(parsedRetentionDays)) {
+    if (retentionDays) {
+      core.warning(`Ignoring invalid retention-days value: ${retentionDays}`);
+    }
+  } else if (parsedRetentionDays > 0) {
     uploadOptions.retentionDays = parsedRetentionDays;
   }
 

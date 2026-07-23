@@ -72,6 +72,10 @@ runs:
         const path = require('path');
 
         const input = process.env.INPUT_PATH || '';
+        if (input.includes('\0')) {
+          throw new Error('Artifact path input contains unsupported null bytes.');
+        }
+
         const paths = input
           .split(/[\r\n|]+/)
           .map((value) => value.trim())
@@ -91,6 +95,7 @@ runs:
         node <<'NODE'
         const { spawnSync } = require('child_process');
         const fs = require('fs');
+        const sanitizeForLog = (value) => JSON.stringify(value);
 
         const paths = (process.env.ARTIFACT_PATHS || '')
           .split(/\r?\n/)
@@ -103,11 +108,11 @@ runs:
           }
 
           if (artifactPath.includes(':')) {
-            console.error(`Artifact path contains unsupported ':' character: "${artifactPath}"`);
+            console.error(`Artifact path contains unsupported ':' character: ${sanitizeForLog(artifactPath)}`);
             process.exit(1);
           }
 
-          console.log(`Scanning path "${artifactPath}"`);
+          console.log(`Scanning path ${sanitizeForLog(artifactPath)}`);
           const result = spawnSync(
             'docker',
             [
