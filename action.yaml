@@ -81,7 +81,10 @@ runs:
           .map((value) => value.trim())
           .filter((value) => value.length > 0)
           .map((value) => path.resolve(value));
-        const delimiter = `ARTIFACT_PATHS_${crypto.randomBytes(16).toString('hex')}`;
+        let delimiter;
+        do {
+          delimiter = `ARTIFACT_PATHS_${crypto.randomBytes(16).toString('hex')}`;
+        } while (paths.some((value) => value.includes(delimiter)));
 
         fs.appendFileSync(
           process.env.GITHUB_ENV,
@@ -107,7 +110,7 @@ runs:
             continue;
           }
 
-          if (artifactPath.includes(':')) {
+          if (process.platform !== 'win32' && artifactPath.includes(':')) {
             console.error(`Artifact path contains unsupported ':' character: ${sanitizeForLog(artifactPath)}`);
             process.exit(1);
           }

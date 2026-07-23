@@ -37,7 +37,7 @@ function isFile(inputPath) {
   try {
     return fs.lstatSync(inputPath).isFile();
   } catch (error) {
-    throw new Error(`Unable to inspect artifact path: ${inputPath}`);
+    throw new Error(`Unable to inspect artifact path: ${inputPath}. ${error.message}`);
   }
 }
 
@@ -48,6 +48,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
 
   for (const singlePath of paths) {
     if (!fs.existsSync(singlePath)) {
+      core.info(`Skipping missing artifact path: ${singlePath}`);
       continue;
     }
 
@@ -85,6 +86,10 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
   if (Number.isNaN(parsedRetentionDays)) {
     if (retentionDays) {
       core.warning(`Ignoring invalid retention-days value: ${retentionDays}`);
+    }
+  } else if (parsedRetentionDays <= 0) {
+    if (retentionDays) {
+      core.warning(`Ignoring non-positive retention-days value: ${retentionDays}`);
     }
   } else if (parsedRetentionDays > 0) {
     uploadOptions.retentionDays = parsedRetentionDays;
