@@ -76,10 +76,11 @@ runs:
           .map((value) => value.trim())
           .filter((value) => value.length > 0)
           .map((value) => path.resolve(value));
+        const delimiter = `ARTIFACT_PATHS_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
         fs.appendFileSync(
           process.env.GITHUB_ENV,
-          `ARTIFACT_PATHS<<__EOF__\n${paths.join('\n')}\n__EOF__\n`
+          `ARTIFACT_PATHS<<${delimiter}\n${paths.join('\n')}\n${delimiter}\n`
         );
         NODE
 
@@ -91,6 +92,11 @@ runs:
 
           if [ ! -e "$path" ]; then
             continue
+          fi
+
+          if [[ "$path" == *:* ]]; then
+            echo "Artifact path contains unsupported ':' character: \"$path\"" >&2
+            exit 1
           fi
 
           echo "Scanning path \"$path\""

@@ -63,7 +63,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
   if (filesToUpload.length === 0) {
     const message = `No files were found with the provided path: ${artifactPath}. No artifacts will be uploaded.`;
 
-    switch (String(ifNoFilesFound || DEFAULT_IF_NO_FILES_FOUND).toLowerCase()) {
+    switch (String(ifNoFilesFound ?? DEFAULT_IF_NO_FILES_FOUND).toLowerCase()) {
       case 'error':
         throw new Error(message);
       case 'ignore':
