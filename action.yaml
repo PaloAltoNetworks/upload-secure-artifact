@@ -28,6 +28,20 @@ inputs:
       Higher levels will result in better compression, but will take longer to complete.
       For large files that are not easily compressed, a value of 0 is recommended for significantly faster uploads.
     default: '6'
+  if-no-files-found:
+    description: >
+      The desired behavior if no files are found using the provided path.
+
+      Available Options:
+        warn: Output a warning but do not fail the action
+        error: Fail the action with an error message
+        ignore: Do not output any warnings or errors, the action does not fail
+    default: 'warn'
+  include-hidden-files:
+    description: >
+      If true, hidden files will be included in the artifact.
+      If false, hidden files will be excluded from the artifact.
+    default: 'false'
 
 outputs:
   artifact-id:
@@ -39,47 +53,88 @@ outputs:
     description: >
       A download URL for the artifact that was just uploaded. Empty if the artifact upload failed.
 
-      This download URL only works for requests Authenticated with GitHub. Anonymous downloads will be prompted to first login. 
-      If an anonymous download URL is needed than a short time restricted URL can be generated using the download artifact API: https://docs.github.com/en/rest/actions/artifacts#download-an-artifact    
+      This download URL only works for requests Authenticated with GitHub. Anonymous downloads will be prompted to first login.
+      If an anonymous download URL is needed than a short time restricted URL can be generated using the download artifact API: https://docs.github.com/en/rest/actions/artifacts#download-an-artifact
 
       This URL will be valid for as long as the artifact exists and the workflow run and repository exists. Once an artifact has expired this URL will no longer work.
-      Common uses cases for such a download URL can be adding download links to artifacts in descriptions or comments on pull requests or issues. 
+      Common uses cases for such a download URL can be adding download links to artifacts in descriptions or comments on pull requests or issues.
 runs:
   using: "composite"
   steps:
-
-    - name: Secrets Scanning
-      if: inputs.scan-only-runner-token == 'false'
-      run: docker run -v "/$(pwd)/${INPUT_PATH}:/scan" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+    - name: Prepare artifact paths
       shell: bash
       env:
         INPUT_PATH: ${{ inputs.path }}
-            
+      run: |
+        node <<'NODE'
+        const fs = require('fs');
+        const path = require('path');
+
+        const input = process.env.INPUT_PATH || '';
+        const paths = input
+          .split(/[\r\n|]+/)
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0)
+          .map((value) => path.resolve(value));
+
+        fs.appendFileSync(
+          process.env.GITHUB_ENV,
+          `PATH_ARR<<__EOF__\n${paths.join('\n')}\n__EOF__\n`
+        );
+        NODE
+
+    - name: Secrets Scanning
+      if: inputs.scan-only-runner-token == 'false'
+      run: |
+        while IFS= read -r path; do
+          [ -n "$path" ] || continue
+
+          if [ ! -e "$path" ]; then
+            continue
+          fi
+
+          echo "Scanning path $path"
+          docker run -v "${path}:/scan" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+        done <<< "$PATH_ARR"
+      shell: bash
+      env:
+        PATH_ARR: ${{ env.PATH_ARR }}
+
     - name: Set up Node.js
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: 24
 
-    - name: npm install 
-      shell: bash 
-      run: | 
-          cd ${{ github.action_path }}
-          npm ci 
-         
+    - name: npm install
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        npm ci
+
     - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
-         script: |
+        script: |
           const script = require('${{github.action_path}}/index.js')
           const artifactName = process.env.NAME;
-          const artifactPath = process.env.PATH_INPUT;
+          const artifactPath = process.env.PATH_ARR;
           const retentionDays = process.env.RETENTION_DAYS;
           const compressionLevel = process.env.COMPRESSION_LEVEL;
-          script({"github":github, "context":context, artifactName:artifactName, artifactPath:artifactPath, retentionDays:retentionDays, compressionLevel:compressionLevel})
+          const ifNoFilesFound = process.env.IF_NO_FILES_FOUND;
+          const includeHiddenFiles = process.env.INCLUDE_HIDDEN_FILES;
+          script({
+            github,
+            context,
+            artifactName,
+            artifactPath,
+            retentionDays,
+            compressionLevel,
+            ifNoFilesFound,
+            includeHiddenFiles,
+          })
       env:
         NAME: ${{ inputs.name }}
-        PATH_INPUT: ${{ inputs.path }}
+        PATH_ARR: ${{ env.PATH_ARR }}
         RETENTION_DAYS: ${{ inputs.retention-days }}
         COMPRESSION_LEVEL: ${{ inputs.compression-level }}
-
-          
-     
+        IF_NO_FILES_FOUND: ${{ inputs.if-no-files-found }}
+        INCLUDE_HIDDEN_FILES: ${{ inputs.include-hidden-files }}
