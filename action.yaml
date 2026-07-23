@@ -67,6 +67,7 @@ runs:
         INPUT_PATH: ${{ inputs.path }}
       run: |
         node <<'NODE'
+        const crypto = require('crypto');
         const fs = require('fs');
         const path = require('path');
 
@@ -76,7 +77,7 @@ runs:
           .map((value) => value.trim())
           .filter((value) => value.length > 0)
           .map((value) => path.resolve(value));
-        const delimiter = `ARTIFACT_PATHS_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const delimiter = `ARTIFACT_PATHS_${crypto.randomBytes(16).toString('hex')}`;
 
         fs.appendFileSync(
           process.env.GITHUB_ENV,
@@ -87,22 +88,50 @@ runs:
     - name: Secrets Scanning
       if: inputs.scan-only-runner-token == 'false'
       run: |
-        while IFS= read -r path; do
-          [ -n "$path" ] || continue
+        node <<'NODE'
+        const { spawnSync } = require('child_process');
+        const fs = require('fs');
 
-          if [ ! -e "$path" ]; then
-            continue
-          fi
+        const paths = (process.env.ARTIFACT_PATHS || '')
+          .split(/\r?\n/)
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0);
 
-          if [[ "$path" == *:* ]]; then
-            echo "Artifact path contains unsupported ':' character: \"$path\"" >&2
-            exit 1
-          fi
+        for (const artifactPath of paths) {
+          if (!fs.existsSync(artifactPath)) {
+            continue;
+          }
 
-          echo "Scanning path \"$path\""
-          docker_mount="${path}:/scan"
-          docker run -v "$docker_mount" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
-        done <<< "$ARTIFACT_PATHS"
+          if (artifactPath.includes(':')) {
+            console.error(`Artifact path contains unsupported ':' character: "${artifactPath}"`);
+            process.exit(1);
+          }
+
+          console.log(`Scanning path "${artifactPath}"`);
+          const result = spawnSync(
+            'docker',
+            [
+              'run',
+              '-v',
+              `${artifactPath}:/scan`,
+              'zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba',
+              'detect',
+              '--no-git',
+              '--source',
+              '/scan',
+            ],
+            { stdio: 'inherit' },
+          );
+
+          if (result.error) {
+            throw result.error;
+          }
+
+          if (result.status !== 0) {
+            process.exit(result.status || 1);
+          }
+        }
+        NODE
       shell: bash
       env:
         ARTIFACT_PATHS: ${{ env.ARTIFACT_PATHS }}

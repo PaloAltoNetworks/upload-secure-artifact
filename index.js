@@ -37,7 +37,7 @@ function isFile(inputPath) {
   return fs.lstatSync(inputPath).isFile();
 }
 
-async function uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
+async function uploadArtifact(artifactClient, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound = DEFAULT_IF_NO_FILES_FOUND, includeHiddenFiles) {
   const paths = parseArtifactPaths(artifactPath);
   const filesToUpload = [];
   const includeHidden = String(includeHiddenFiles).toLowerCase() === 'true';
@@ -63,7 +63,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
   if (filesToUpload.length === 0) {
     const message = `No files were found with the provided path: ${artifactPath}. No artifacts will be uploaded.`;
 
-    switch (String(ifNoFilesFound ?? DEFAULT_IF_NO_FILES_FOUND).toLowerCase()) {
+    switch (String(ifNoFilesFound).toLowerCase()) {
       case 'error':
         throw new Error(message);
       case 'ignore':
