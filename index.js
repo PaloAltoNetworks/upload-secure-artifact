@@ -61,6 +61,10 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
   const path = require('path');
 
   const gitDir = findGitFolder(pathToCheck, '.git');
+  if (!gitDir) {
+    // No .git folder found under the artifact path: nothing to inspect.
+    return null;
+  }
   const configFile = path.join(gitDir, 'config');
   const regex = new RegExp('eC1hY2Nlc3MtdG9rZW46Z2hz', 'i');
 
