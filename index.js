@@ -13,13 +13,38 @@ async function main(github, context, artifactName,artifactPath,retentionDays,com
   }
 }
 
-async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
-  foundPath = hasGitFolderWithGitHubRunnerToken(artifactPath)
-  if (foundPath) {
-    throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
-  }                
+function parseArtifactPaths(artifactPath) {
+  if (!artifactPath) {
+    return [];
+  }
+  // Support both the standard newline-separated convention used by
+  // actions/upload-artifact and the pipe-separated convention this action
+  // historically accepted. Trim and drop empty entries.
+  return artifactPath
+    .split(/[\r\n|]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+}
 
-  const filesToUpload = await populateFilesWithFullPath(artifactPath);
+async function uploadArtifact(artifactClient, artifactName, artifactPath,retentionDays,compressionLevel) {
+  const paths = parseArtifactPaths(artifactPath);
+  if (paths.length === 0) {
+    throw new Error('No artifact path provided.');
+  }
+
+  const filesToUpload = [];
+  for (const singlePath of paths) {
+    if (!fs.existsSync(singlePath)) {
+      throw new Error(`Artifact path does not exist: ${singlePath}`);
+    }
+
+    const foundPath = hasGitFolderWithGitHubRunnerToken(singlePath);
+    if (foundPath) {
+      throw new Error(`Found GITHUB_TOKEN in artifact, under path ${foundPath}`);
+    }
+
+    filesToUpload.push(...(await collectFiles(singlePath)));
+  }
 
   await artifactClient.uploadArtifact(
     artifactName,
@@ -33,6 +58,11 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath,retenti
 function findGitFolder(startPath) {
     if (!fs.existsSync(startPath)) {
         console.log("Start path does not exist.");
+        return null;
+    }
+
+    // A single file cannot contain a .git folder; nothing to scan.
+    if (!fs.statSync(startPath).isDirectory()) {
         return null;
     }
 
@@ -81,21 +111,32 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
     }
 }
 
-async function populateFilesWithFullPath(rootPath) {
-  const fs = require('fs').promises; // Use promises for cleaner async/await usage
+async function collectFiles(targetPath) {
+  const fsp = require('fs').promises; // Use promises for cleaner async/await usage
   const path = require('path');
   const files = [];
 
-  const dirEntries = await fs.readdir(rootPath);
-  for (const fileName of dirEntries) {
-    const filePath = path.join(rootPath, fileName);
+  const stats = await fsp.stat(targetPath);
+  if (stats.isFile()) {
+    // A single file was provided directly.
+    files.push(targetPath);
+    return files;
+  }
 
-    const stats = await fs.stat(filePath);
-    if (stats.isFile()) {
+  if (!stats.isDirectory()) {
+    return files;
+  }
+
+  const dirEntries = await fsp.readdir(targetPath);
+  for (const fileName of dirEntries) {
+    const filePath = path.join(targetPath, fileName);
+
+    const entryStats = await fsp.stat(filePath);
+    if (entryStats.isFile()) {
       files.push(filePath);
-    } else if (stats.isDirectory()) {
+    } else if (entryStats.isDirectory()) {
       // Recursively collect files from subdirectories
-      files.push(...(await populateFilesWithFullPath(filePath)));
+      files.push(...(await collectFiles(filePath)));
     }
   }
 
