@@ -79,7 +79,7 @@ runs:
 
         fs.appendFileSync(
           process.env.GITHUB_ENV,
-          `PATH_ARR<<__EOF__\n${paths.join('\n')}\n__EOF__\n`
+          `ARTIFACT_PATHS<<__EOF__\n${paths.join('\n')}\n__EOF__\n`
         );
         NODE
 
@@ -93,12 +93,13 @@ runs:
             continue
           fi
 
-          echo "Scanning path $path"
-          docker run -v "${path}:/scan" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
-        done <<< "$PATH_ARR"
+          echo "Scanning path \"$path\""
+          docker_mount="${path}:/scan"
+          docker run -v "$docker_mount" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+        done <<< "$ARTIFACT_PATHS"
       shell: bash
       env:
-        PATH_ARR: ${{ env.PATH_ARR }}
+        ARTIFACT_PATHS: ${{ env.ARTIFACT_PATHS }}
 
     - name: Set up Node.js
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -116,7 +117,7 @@ runs:
         script: |
           const script = require('${{github.action_path}}/index.js')
           const artifactName = process.env.NAME;
-          const artifactPath = process.env.PATH_ARR;
+          const artifactPath = process.env.ARTIFACT_PATHS;
           const retentionDays = process.env.RETENTION_DAYS;
           const compressionLevel = process.env.COMPRESSION_LEVEL;
           const ifNoFilesFound = process.env.IF_NO_FILES_FOUND;
@@ -133,7 +134,7 @@ runs:
           })
       env:
         NAME: ${{ inputs.name }}
-        PATH_ARR: ${{ env.PATH_ARR }}
+        ARTIFACT_PATHS: ${{ env.ARTIFACT_PATHS }}
         RETENTION_DAYS: ${{ inputs.retention-days }}
         COMPRESSION_LEVEL: ${{ inputs.compression-level }}
         IF_NO_FILES_FOUND: ${{ inputs.if-no-files-found }}

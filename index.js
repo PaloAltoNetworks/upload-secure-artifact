@@ -2,6 +2,7 @@ const { DefaultArtifactClient } = require("@actions/artifact");
 const fs = require('fs');
 const path = require('path');
 const core = require('@actions/core');
+const DEFAULT_IF_NO_FILES_FOUND = 'warn';
 
 async function main(github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles) {
   const artifactClient = new DefaultArtifactClient();
@@ -62,7 +63,7 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
   if (filesToUpload.length === 0) {
     const message = `No files were found with the provided path: ${artifactPath}. No artifacts will be uploaded.`;
 
-    switch (String(ifNoFilesFound || 'warn').toLowerCase()) {
+    switch (String(ifNoFilesFound || DEFAULT_IF_NO_FILES_FOUND).toLowerCase()) {
       case 'error':
         throw new Error(message);
       case 'ignore':
@@ -75,11 +76,17 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
     }
   }
 
+  const uploadOptions = {};
+  const parsedRetentionDays = Number.parseInt(retentionDays, 10);
+  if (Number.isInteger(parsedRetentionDays) && parsedRetentionDays > 0) {
+    uploadOptions.retentionDays = parsedRetentionDays;
+  }
+
   await artifactClient.uploadArtifact(
     artifactName,
     filesToUpload,
     process.env.GITHUB_WORKSPACE,
-    { retentionDays: 10 },
+    uploadOptions,
   );
 }
 
