@@ -48,10 +48,12 @@ runs:
   using: "composite"
   steps:
 
-    - name: Secrets Scanning 
+    - name: Secrets Scanning
       if: inputs.scan-only-runner-token == 'false'
-      run: docker run -v /$(pwd)/${{ inputs.path }}:/scan zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
-      shell: bash 
+      run: docker run -v "/$(pwd)/${INPUT_PATH}:/scan" zricethezav/gitleaks@sha256:75bdb2b2f4db213cde0b8295f13a88d6b333091bbfbf3012a4e083d00d31caba detect --no-git --source /scan
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
             
     - name: Set up Node.js
       uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #3.03
@@ -66,9 +68,18 @@ runs:
          
     - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #7.01
       with:
-         script: |       
+         script: |
           const script = require('${{github.action_path}}/index.js')
-          script({"github":github, "context":context,artifactName:"${{ inputs.name }}",artifactPath:"${{ inputs.path }}",retentionDays:"${{ inputs.retention-days }}",compressionLevel:"${{ inputs.compression-level }}"})
+          const artifactName = process.env.NAME;
+          const artifactPath = process.env.PATH_INPUT;
+          const retentionDays = process.env.RETENTION_DAYS;
+          const compressionLevel = process.env.COMPRESSION_LEVEL;
+          script({"github":github, "context":context, artifactName:artifactName, artifactPath:artifactPath, retentionDays:retentionDays, compressionLevel:compressionLevel})
+      env:
+        NAME: ${{ inputs.name }}
+        PATH_INPUT: ${{ inputs.path }}
+        RETENTION_DAYS: ${{ inputs.retention-days }}
+        COMPRESSION_LEVEL: ${{ inputs.compression-level }}
 
           
      
