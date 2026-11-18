@@ -98,16 +98,29 @@ runs:
         node <<'NODE'
         const { spawnSync } = require('child_process');
         const fs = require('fs');
+        const path = require('path');
         const sanitizeForLog = (value) => JSON.stringify(value);
+        const isWithin = (root, target) => {
+          const relative = path.relative(root, target);
+          return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+        };
 
         const paths = (process.env.ARTIFACT_PATHS || '')
           .split(/\r?\n/)
           .map((value) => value.trim())
           .filter((value) => value.length > 0);
 
-        for (const artifactPath of paths) {
-          if (!fs.existsSync(artifactPath)) {
+        for (const configuredPath of paths) {
+          if (!fs.existsSync(configuredPath)) {
             continue;
+          }
+
+          // Scan the canonical path so Docker and the uploader agree on the
+          // root. The uploader rejects any file resolving outside this root.
+          const artifactPath = fs.realpathSync(configuredPath);
+          if (process.platform !== 'win32' && ['/proc', '/sys', '/dev'].some((root) => isWithin(root, artifactPath))) {
+            console.error(`Artifact path ${sanitizeForLog(configuredPath)} resolves to unsupported location ${sanitizeForLog(artifactPath)}`);
+            process.exit(1);
           }
 
           if (process.platform !== 'win32' && artifactPath.includes(':')) {
