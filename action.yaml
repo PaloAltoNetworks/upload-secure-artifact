@@ -39,8 +39,10 @@ inputs:
     default: 'warn'
   include-hidden-files:
     description: >
-      If true, hidden files will be included in the artifact.
-      If false, hidden files will be excluded from the artifact.
+      If true, hidden files and directories will be included in the artifact.
+      If false, hidden files and everything beneath hidden directories
+      (e.g. .git/, .aws/, .ssh/) will be excluded from the artifact, including
+      explicitly configured paths that are hidden.
     default: 'false'
 
 outputs:

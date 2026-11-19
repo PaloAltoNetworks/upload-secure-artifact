@@ -34,7 +34,13 @@ function parseArtifactPaths(artifactPath) {
 }
 
 const PSEUDO_FILESYSTEM_ROOTS = ['/proc', '/sys', '/dev'];
-const GITHUB_RUNNER_TOKEN_REGEX = /eC1hY2Nlc3MtdG9rZW46Z2hz/i;
+// actions/checkout persists credentials as
+//   extraheader = AUTHORIZATION: basic base64("x-access-token:<token>")
+// base64("x-access-token:") is exactly 20 characters, so the encoded prefix is
+// stable regardless of the token type (ghs_ GITHUB_TOKEN, ghp_/github_pat_ PAT,
+// etc.). Also match the plaintext form used in remote URLs
+// (https://x-access-token:<token>@github.com/...).
+const GITHUB_RUNNER_TOKEN_REGEX = /eC1hY2Nlc3MtdG9rZW46[A-Za-z0-9+/]{4,}|x-access-token:[A-Za-z0-9_]{4,}/;
 
 function isWithin(root, target) {
   const relative = path.relative(root, target);
@@ -56,8 +62,45 @@ function assertNotPseudoFilesystem(displayPath, resolvedPath) {
   }
 }
 
-// Checks a file selected for upload that is (or resolves to) a .git/config
-// file, which covers direct file inputs and links that findGitFolder misses.
+function isHiddenName(name) {
+  return name.startsWith('.') && name !== '.' && name !== '..';
+}
+
+function hasHiddenSegment(relativePath) {
+  return relativePath.split(/[\\/]+/).some(isHiddenName);
+}
+
+// Returns true when a configured (top-level) artifact path is hidden. Inside
+// the workspace every segment relative to the workspace is considered (so
+// ".git/config" or ".aws/credentials" count as hidden); outside it only the
+// basename is, so absolute paths under e.g. ~/.cache are not rejected.
+function isHiddenTopLevelPath(configuredPath, resolvedPath) {
+  const workspace = process.env.GITHUB_WORKSPACE;
+  let workspaceReal = null;
+  if (workspace) {
+    try {
+      workspaceReal = fs.realpathSync(workspace);
+    } catch (error) {
+      workspaceReal = path.resolve(workspace);
+    }
+  }
+
+  for (const candidate of [path.resolve(configuredPath), resolvedPath]) {
+    if (workspaceReal && isWithin(workspaceReal, candidate)) {
+      if (hasHiddenSegment(path.relative(workspaceReal, candidate))) {
+        return true;
+      }
+    } else if (isHiddenName(path.basename(candidate))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Checks a file selected for upload that is (or resolves to) a git config
+// file: .git/config, but also submodule configs under .git/modules/**/config,
+// where actions/checkout also persists credentials. This covers direct file
+// inputs and anything findGitFolders misses.
 function gitConfigFileWithGitHubRunnerToken(filePath) {
   let resolved;
   try {
@@ -66,7 +109,8 @@ function gitConfigFileWithGitHubRunnerToken(filePath) {
     throw new Error(`Unable to resolve artifact file: ${filePath}. ${error.message}`);
   }
 
-  if (path.basename(resolved) !== 'config' || path.basename(path.dirname(resolved)) !== '.git') {
+  const segments = path.dirname(resolved).split(path.sep);
+  if (path.basename(resolved) !== 'config' || !segments.includes('.git')) {
     return null;
   }
 
@@ -99,13 +143,27 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
     }
 
     const rootStats = await fs.promises.stat(scanRoot);
+    if (!rootStats.isFile() && !rootStats.isDirectory()) {
+      throw new Error(`Artifact path is not a regular file or directory: ${singlePath}`);
+    }
+
+    // Token checks above run before the hidden filter on purpose: an explicit
+    // attempt to upload credentials should fail loudly, not be skipped.
     if (rootStats.isFile()) {
-      filesToUpload.push(singlePath);
+      const tokenPath = gitConfigFileWithGitHubRunnerToken(singlePath);
+      if (tokenPath) {
+        throw new Error(`Found GITHUB_TOKEN in artifact, under path ${tokenPath}`);
+      }
+    }
+
+    if (!includeHidden && isHiddenTopLevelPath(singlePath, scanRoot)) {
+      core.info(`Skipping hidden artifact path (set include-hidden-files: true to upload it): ${singlePath}`);
       continue;
     }
 
-    if (!rootStats.isDirectory()) {
-      throw new Error(`Artifact path is not a regular file or directory: ${singlePath}`);
+    if (rootStats.isFile()) {
+      filesToUpload.push(singlePath);
+      continue;
     }
 
     filesToUpload.push(...(await collectFiles(singlePath, scanRoot, includeHidden)));
@@ -156,10 +214,17 @@ async function uploadArtifact(artifactClient, artifactName, artifactPath, retent
   );
 }
 
-function findGitFolder(startPath) {
+// Returns every .git directory at or below startPath, including startPath
+// itself when the configured artifact path *is* a .git directory.
+function findGitFolders(startPath, found = []) {
   try {
     if (!fs.existsSync(startPath) || !fs.statSync(startPath).isDirectory()) {
-      return null;
+      return found;
+    }
+
+    if (found.length === 0 && path.basename(startPath) === '.git') {
+      found.push(startPath);
+      return found;
     }
 
     // Use lstat semantics (Dirent) and do not descend into symlinked
@@ -169,43 +234,36 @@ function findGitFolder(startPath) {
     const entries = fs.readdirSync(startPath, { withFileTypes: true });
 
     for (const entry of entries) {
-      const filePath = path.join(startPath, entry.name);
-
-      if (entry.name === '.git' && entry.isDirectory()) {
-        return filePath;
+      if (!entry.isDirectory()) {
+        continue;
       }
-
-      if (entry.isDirectory()) {
-        const result = findGitFolder(filePath);
-        if (result) {
-          return result;
-        }
+      const filePath = path.join(startPath, entry.name);
+      if (entry.name === '.git') {
+        found.push(filePath);
+      } else {
+        findGitFolders(filePath, found);
       }
     }
   } catch (error) {
     console.log(error);
   }
 
-  return null;
+  return found;
 }
 
 function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
-  const gitDir = findGitFolder(pathToCheck);
-  if (!gitDir) {
-    return null;
-  }
-
-  const configFile = path.join(gitDir, 'config');
-  try {
-    if (fs.existsSync(configFile)) {
-      const configContent = fs.readFileSync(configFile, 'utf-8');
-      if (GITHUB_RUNNER_TOKEN_REGEX.test(configContent)) {
-        return configFile;
+  for (const gitDir of findGitFolders(pathToCheck)) {
+    const configFile = path.join(gitDir, 'config');
+    try {
+      if (fs.existsSync(configFile)) {
+        const configContent = fs.readFileSync(configFile, 'utf-8');
+        if (GITHUB_RUNNER_TOKEN_REGEX.test(configContent)) {
+          return configFile;
+        }
       }
+    } catch (error) {
+      console.error('Error checking Git config:', error);
     }
-  } catch (error) {
-    console.error('Error checking Git config:', error);
-    return null;
   }
 
   return null;
@@ -216,6 +274,11 @@ function hasGitFolderWithGitHubRunnerToken(pathToCheck) {
 // accepted when its fully resolved target stays inside scanRoot (the
 // canonical path the secrets scanner inspected). Links that escape it are
 // rejected so the uploaded bytes always match the scanned bytes.
+//
+// When includeHiddenFiles is false, hidden entries are skipped whether they
+// are files or directories, so nothing beneath e.g. .git/, .aws/ or .ssh/ is
+// uploaded. A non-hidden symlink whose target lies under a hidden path inside
+// scanRoot is skipped as well, so the filter cannot be sidestepped by aliasing.
 async function collectFiles(targetPath, scanRoot, includeHiddenFiles, visitedDirs = new Set()) {
   const fsp = fs.promises;
   const files = [];
@@ -229,6 +292,9 @@ async function collectFiles(targetPath, scanRoot, includeHiddenFiles, visitedDir
   const dirEntries = await fsp.readdir(targetPath);
   for (const fileName of dirEntries) {
     const filePath = path.join(targetPath, fileName);
+    if (!includeHiddenFiles && isHiddenName(fileName)) {
+      continue;
+    }
     let entryStats = await fsp.lstat(filePath);
 
     if (entryStats.isSymbolicLink()) {
@@ -246,23 +312,21 @@ async function collectFiles(targetPath, scanRoot, includeHiddenFiles, visitedDir
         );
       }
 
+      if (!includeHiddenFiles && hasHiddenSegment(path.relative(scanRoot, resolved))) {
+        continue;
+      }
+
       entryStats = await fsp.stat(resolved);
     }
 
     if (entryStats.isFile()) {
-      if (includeHiddenFiles || !isHiddenFile(filePath)) {
-        files.push(filePath);
-      }
+      files.push(filePath);
     } else if (entryStats.isDirectory()) {
       files.push(...(await collectFiles(filePath, scanRoot, includeHiddenFiles, visitedDirs)));
     }
   }
 
   return files;
-}
-
-function isHiddenFile(filePath) {
-  return path.basename(filePath).startsWith('.');
 }
 
 module.exports = function ({ github, context, artifactName, artifactPath, retentionDays, compressionLevel, ifNoFilesFound, includeHiddenFiles }) {
